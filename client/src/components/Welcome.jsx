@@ -21,15 +21,20 @@ const Input = ({ placeholder, name, type, value, handleChange }) => (
 );
 
 const Welcome = () => {
-  const { connectWallet, currentAccount, formData, sendTransaction, handleChange } =
-    useContext(TransactionContext);
+  const {
+    connectWallet,
+    currentAccount,
+    formData,
+    sendTransaction,
+    handleChange,
+  } = useContext(TransactionContext);
 
-  const handleSubmit = () => {
-    const {addressTo, amount, keyword, message} = formData;
+  const handleSubmit = (e) => {
+    const { addressTo, amount, keyword, message } = formData;
 
     e.preventDefault();
 
-    if(!addressTo ||!amount ||!keyword ||!message) return ;
+    if (!addressTo || !amount || !keyword || !message) return;
 
     sendTransaction();
   };
@@ -90,25 +95,25 @@ const Welcome = () => {
               placeholder="Address To"
               name="addressTo"
               type="text"
-              handleChange={() => {handleChange()}}
+              handleChange={handleChange}
             />
             <Input
               placeholder="Amount (ETH)"
               name="amount"
               type="number"
-              handleChange={() => {handleChange()}}
+              handleChange={handleChange}
             />
             <Input
               placeholder="Keyword (Gif)"
               name="keyword"
               type="text"
-              handleChange={() => {handleChange()}}
+              handleChange={handleChange}
             />
             <Input
               placeholder="Enter Message"
               name="message"
               type="text"
-              handleChange={() => {handleChange()}}
+              handleChange={handleChange}
             />
 
             <div className="h-[1px] w-full bg-gray-400 my-2"></div>

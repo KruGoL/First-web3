@@ -1,22 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
-
-import { contractABI, contractAddress } from "../utils/cnstants";
+import { contractABI, contractAddress } from "../utils/costants";
 
 export const TransactionContext = React.createContext();
 
 const { ethereum } = window;
 
-const getEthereumContract = () => {
-  const provider = new ethers.providers.Web3Provider(ethereum);
-  const signer = provider.getSigner();
+const getEthereumContract = async () => {
+  const provider = new ethers.BrowserProvider(ethereum);
+  const signer = await provider.getSigner();
   const transactionContract = new ethers.Contract(
     contractAddress,
     contractABI,
     signer
   );
-
-  console.log({ provider, signer, transactionContract });
+  return transactionContract;
 };
 
 export const TransactionProvider = ({ children }) => {
@@ -27,6 +25,10 @@ export const TransactionProvider = ({ children }) => {
     keyword: "",
     message: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [transactionCount, setTransactionCount] = useState(
+    localStorage.getItem("transactionCount")
+  );
 
   const handleChange = (e, name) => {
     setFormData((prevState) => ({ ...prevState, [name]: e.target.value }));
@@ -68,13 +70,47 @@ export const TransactionProvider = ({ children }) => {
     }
   };
 
-  const sendTransaction = async (to, value) => {
+  const sendTransaction = async () => {
     try {
       if (!ethereum) {
         return alert("Please install metamask");
       }
 
-      //get the data from the form...
+      const { addressTo, amount, keyword, message } = formData;
+      const transactionContract = await getEthereumContract();
+      const parsedAmount = ethers.parseEther(amount);
+
+      await ethereum
+        .request({
+          method: "eth_sendTransaction",
+          params: [
+            {
+              from: currentAccount, // The user's active address.
+              to: addressTo, // Required except during contract publications.
+              value: parsedAmount.toString(16), // "0x38D7EA4C68000", // Only required to send ether to the recipient from the initiating external account.
+              //gasPrice: "0x09184e72a000", // Customizable by the user during MetaMask confirmation.
+              gas: "0x5208", // Customizable by the user during MetaMask confirmation.
+            },
+          ],
+        })
+        .then((txHash) => console.log(txHash))
+        .catch((error) => console.error(error));
+
+      const transactionHash = await transactionContract.addToBlockchain(
+        addressTo,
+        parsedAmount,
+        message,
+        keyword
+      );
+
+      setIsLoading(true);
+      console.log(`Loading - ${transactionHash.hash}`);
+      setIsLoading(false);
+      console.log(`Success - ${transactionHash.hash}`);
+
+      const transactionCount = await transactionContract.getTransactionCount();
+
+      setTransactionCount(Number(transactionCount));
     } catch (error) {
       console.log(error);
 
